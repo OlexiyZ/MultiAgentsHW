@@ -1,11 +1,9 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
+from typing import Any, Callable
 from urllib.parse import urlparse
-
-import trafilatura
-from ddgs import DDGS
-from langchain_core.tools import tool
 
 from config import BASE_DIR, Settings
 
@@ -30,33 +28,11 @@ def _safe_report_path(filename: str) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
     return output_dir / safe_name
 
-# web_search_tool = {
-#     "type": "function",
-#     "name": "web_search",
-#     "description": (
-#         "Searches the web using DuckDuckGo and returns a list of results. "
-#         "Use this when you need current or factual information not in your training data."
-#     ),
-#     "input_schema": {
-#         "type": "object",
-#         "properties": {
-#             "query": {
-#                 "type": "string",
-#                 "description": "The search query string.",
-#             },
-#             "max_results": {
-#                 "type": "integer",
-#                 "description": "Maximum number of results to return (1–20).",
-#                 "default": 5,
-#             },
-#         },
-#         "required": ["query"],
-#     },
-# }
 
-@tool
 def web_search(query: str, max_results: int | None = None) -> list[dict]:
     """Search the web with DuckDuckGo and return compact results."""
+    from ddgs import DDGS
+
     search_limit = max_results or settings.max_search_results
     search_limit = max(1, min(search_limit, 10))
 
@@ -81,9 +57,10 @@ def web_search(query: str, max_results: int | None = None) -> list[dict]:
     return results
 
 
-@tool
 def read_url(url: str) -> str:
     """Fetch the main text from a URL and return a trimmed excerpt."""
+    import trafilatura
+
     parsed = urlparse(url)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         return f"Invalid URL: {url}"
@@ -106,7 +83,6 @@ def read_url(url: str) -> str:
     return _clip_text(extracted, settings.max_url_content_length)
 
 
-@tool
 def write_report(filename: str, content: str) -> str:
     """Save a Markdown report into the configured output directory."""
     try:
@@ -118,4 +94,83 @@ def write_report(filename: str, content: str) -> str:
     return f"Report saved to {target_path}"
 
 
-TOOLS = [web_search, read_url, write_report]
+TOOL_DEFINITIONS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "web_search",
+            "description": "Search the web for current or factual information.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Search query describing the information to find.",
+                    },
+                    "max_results": {
+                        "type": "integer",
+                        "description": "Maximum number of results to return.",
+                        "minimum": 1,
+                        "maximum": 10,
+                    },
+                },
+                "required": ["query"],
+                "additionalProperties": False,
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "read_url",
+            "description": "Read the main text content of a specific URL.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "HTTP or HTTPS URL to inspect.",
+                    },
+                },
+                "required": ["url"],
+                "additionalProperties": False,
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "write_report",
+            "description": "Save the final Markdown report into the output directory.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filename": {
+                        "type": "string",
+                        "description": "Markdown file name, for example research_report.md.",
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "Complete Markdown report content.",
+                    },
+                },
+                "required": ["filename", "content"],
+                "additionalProperties": False,
+            },
+        },
+    },
+]
+
+TOOL_REGISTRY: dict[str, Callable[..., Any]] = {
+    "web_search": web_search,
+    "read_url": read_url,
+    "write_report": write_report,
+}
+
+
+def format_tool_result(result: Any, limit: int) -> str:
+    if isinstance(result, str):
+        return _clip_text(result, limit)
+
+    rendered = json.dumps(result, ensure_ascii=False, indent=2)
+    return _clip_text(rendered, limit)
