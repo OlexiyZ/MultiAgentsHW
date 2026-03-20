@@ -1,1 +1,7 @@
 /myenv/
+
+.env
+.idea/
+__pycache__/
+*.pyc
+homework-lesson-4/output/
