@@ -1,4 +1,5 @@
-"""Hybrid retrieval (QueryFusionRetriever: vector + BM25) + SentenceTransformerRerank — LlamaIndex."""
+"""LlamaIndex hybrid retrieval (vector + BM25 fusion) with sentence-transformer reranking.
+Гібридний ретривер LlamaIndex (вектор + BM25) із переранжуванням sentence-transformer."""
 
 from __future__ import annotations
 
@@ -17,9 +18,12 @@ from kb_common import index_dir, load_llama_nodes
 
 
 class RankBm25LlamaRetriever(BaseRetriever):
-    """BM25 over the same chunked nodes used alongside the vector index."""
+    """BM25 lexical retriever built from the same chunked nodes as the vector index.
+    Лексичний ретривер BM25, побудований на тих самих чанкованих вузлах, що й векторний індекс."""
 
     def __init__(self, nodes: list[BaseNode], similarity_top_k: int) -> None:
+        """Tokenize node texts, build a BM25Okapi index, and store the top-k cutoff.
+        Токенізує тексти вузлів, будує індекс BM25Okapi і зберігає поріг top-k."""
         self._nodes = nodes
         self._similarity_top_k = similarity_top_k
         tokenized = []
@@ -30,6 +34,8 @@ class RankBm25LlamaRetriever(BaseRetriever):
         super().__init__()
 
     def _retrieve(self, query_bundle: QueryBundle) -> list[NodeWithScore]:
+        """Score all nodes with BM25 for the query string and return the top similarity_top_k nodes.
+        Оцінює всі вузли через BM25 за текстом запиту й повертає top similarity_top_k вузлів."""
         q_tokens = query_bundle.query_str.lower().split()
         scores = self._bm25.get_scores(q_tokens)
         idxs = sorted(
@@ -43,6 +49,8 @@ class RankBm25LlamaRetriever(BaseRetriever):
 
 
 def hybrid_search_llama(query: str, settings: Settings | None = None) -> str:
+    """Load Chroma via LlamaIndex, fuse vector and BM25 retrievers, rerank, and return text.
+    Завантажує Chroma через LlamaIndex, зливає векторний і BM25-ретривери, rerank і повертає текст."""
     settings = settings or Settings()
     idx_path = index_dir(settings)
     if not idx_path.is_dir():

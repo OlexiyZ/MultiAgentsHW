@@ -1,4 +1,5 @@
-"""Hybrid retrieval (Chroma + BM25) with cross-encoder reranking — LangChain stack."""
+"""LangChain-side hybrid search over Chroma and BM25 with cross-encoder reranking for RAG.
+Гібридний пошук на стороні LangChain: Chroma + BM25 із переранжуванням cross-encoder для RAG."""
 
 from __future__ import annotations
 
@@ -17,6 +18,8 @@ def reciprocal_rank_fusion(
     k: float = 60.0,
     limit: int = 20,
 ) -> list[Document]:
+    """Merge multiple ranked document lists with reciprocal rank fusion and cap the list length.
+    Об’єднує кілька ранжованих списків документів методом reciprocal rank fusion і обмежує довжину."""
     scores: dict[str, float] = {}
     by_text: dict[str, Document] = {}
     for results in ranked_lists:
@@ -36,6 +39,8 @@ _ce_name: str | None = None
 
 
 def _cross_encoder(model_name: str) -> CrossEncoder:
+    """Return a cached CrossEncoder instance, reinitializing it when the model name changes.
+    Повертає кешований екземпляр CrossEncoder і переініціалізує його при зміні назви моделі."""
     global _ce_instance, _ce_name
     if _ce_instance is None or _ce_name != model_name:
         _ce_instance = CrossEncoder(model_name)
@@ -49,6 +54,8 @@ def _rerank_documents(
     model_name: str,
     top_n: int,
 ) -> list[Document]:
+    """Rerank documents with a cross-encoder for the query and keep only the top_n results.
+    Переранжовує документи cross-encoder за запитом і залишає лише top_n результатів."""
     if not documents:
         return []
     model = _cross_encoder(model_name)
@@ -59,6 +66,8 @@ def _rerank_documents(
 
 
 def _format_hits(documents: list[Document]) -> str:
+    """Format retrieved LangChain documents as numbered Markdown snippets with source labels.
+    Форматує знайдені документи LangChain як нумеровані Markdown-фрагменти з позначкою джерела."""
     parts: list[str] = []
     for i, doc in enumerate(documents, start=1):
         meta = doc.metadata or {}
@@ -68,6 +77,8 @@ def _format_hits(documents: list[Document]) -> str:
 
 
 def hybrid_search_langchain(query: str, settings: Settings | None = None) -> str:
+    """Run Chroma similarity search plus BM25, fuse, rerank, and return a trimmed Markdown string.
+    Виконує пошук у Chroma та BM25, злиття, rerank і повертає обрізаний Markdown-текст."""
     settings = settings or Settings()
     idx = index_dir(settings)
     if not idx.is_dir():

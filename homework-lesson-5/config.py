@@ -1,3 +1,6 @@
+"""Application settings, env loading, and system prompt resolution for the lesson 5 agent.
+Налаштування застосунку, завантаження з .env і резолв системного промпта для агента уроку 5."""
+
 from pathlib import Path
 
 import yaml
@@ -9,6 +12,8 @@ BASE_DIR = Path(__file__).resolve().parent
 
 
 def load_system_prompt() -> str:
+    """Load the agent system prompt from system_prompt.yaml or fall back to a default string.
+    Завантажує системний промпт агента з system_prompt.yaml або повертає рядок за замовчуванням."""
     path = BASE_DIR / "system_prompt.yaml"
     if not path.is_file():
         return _DEFAULT_SYSTEM_PROMPT

@@ -1,4 +1,5 @@
-"""Ingest PDFs from data/ into Chroma using LlamaIndex (OpenAI embeddings)."""
+"""Script to ingest PDFs from data/ into Chroma using LlamaIndex and OpenAI embeddings.
+Скрипт інжесту PDF з data/ у Chroma за допомогою LlamaIndex та ембеддингів OpenAI."""
 
 from __future__ import annotations
 
@@ -14,6 +15,8 @@ from kb_common import index_dir, load_llama_nodes
 
 
 def main() -> None:
+    """Rebuild the Chroma index from PDFs in data/ using the LlamaIndex ingestion pipeline.
+    Перебудовує індекс Chroma з PDF у data/ за допомогою пайплайну інжесту LlamaIndex."""
     settings = Settings()
     target = index_dir(settings)
     if target.exists():

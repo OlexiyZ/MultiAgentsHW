@@ -1,3 +1,6 @@
+"""Wires the chat model, tools, memory checkpointer, and LangGraph agent for the homework app.
+Зв’язує чат-модель, інструменти, checkpointer пам’яті та LangGraph-агента для домашнього застосунку."""
+
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
 from langchain.agents import create_agent

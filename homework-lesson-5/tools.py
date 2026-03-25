@@ -1,3 +1,6 @@
+"""LangChain tool definitions for web search, URL reading, reports, and knowledge RAG search.
+Визначення інструментів LangChain: веб-пошук, читання URL, звіти та RAG-пошук по базі знань."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -14,6 +17,8 @@ settings = Settings()
 
 
 def _knowledge_backend_search(query: str) -> str:
+    """Dispatch the query to the LlamaIndex or LangChain hybrid retriever implementation.
+    Передає запит до гібридного ретривера на базі LlamaIndex або LangChain залежно від налаштувань."""
     flavour = (settings.knowledge_flavour or "langchain").strip().lower()
     if flavour in {"llama", "llamaindex"}:
         from retriever_llama_flavour import hybrid_search_llama
@@ -25,6 +30,8 @@ def _knowledge_backend_search(query: str) -> str:
 
 
 def _clip_text(text: str, limit: int) -> str:
+    """Normalize whitespace and truncate text to a maximum character length with an ellipsis.
+    Нормалізує пробіли й обрізає текст до максимальної довжини з додаванням багатокрапки."""
     normalized = " ".join(text.split())
     if len(normalized) <= limit:
         return normalized
@@ -32,6 +39,8 @@ def _clip_text(text: str, limit: int) -> str:
 
 
 def _safe_report_path(filename: str) -> Path:
+    """Resolve a safe Markdown filename inside the configured output directory.
+    Формує безпечну назву Markdown-файлу всередині налаштованого каталогу output."""
     candidate = Path(filename)
     safe_name = candidate.name or "report.md"
     if not safe_name.lower().endswith(".md"):
@@ -67,7 +76,8 @@ def _safe_report_path(filename: str) -> Path:
 
 @tool
 def web_search(query: str, max_results: int | None = None) -> list[dict]:
-    """Search the web with DuckDuckGo and return compact results."""
+    """Search the web with DuckDuckGo and return compact title, URL, and snippet dicts.
+    Шукає в Інтернеті через DuckDuckGo й повертає стислі словники з заголовком, URL і сніпетом."""
     search_limit = max_results or settings.max_search_results
     search_limit = max(1, min(search_limit, 10))
 
@@ -94,7 +104,8 @@ def web_search(query: str, max_results: int | None = None) -> list[dict]:
 
 @tool
 def read_url(url: str) -> str:
-    """Fetch the main text from a URL and return a trimmed excerpt."""
+    """Fetch a page over HTTP(S), extract readable text with trafilatura, and trim it.
+    Завантажує сторінку за HTTP(S), витягує читабельний текст через trafilatura й обрізає його."""
     parsed = urlparse(url)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         return f"Invalid URL: {url}"
@@ -119,7 +130,8 @@ def read_url(url: str) -> str:
 
 @tool
 def write_report(filename: str, content: str) -> str:
-    """Save a Markdown report into the configured output directory."""
+    """Write Markdown content to a file under the configured output directory and confirm the path.
+    Записує вміст Markdown у файл у налаштованому каталозі output і повертає підтвердження зі шляхом."""
     try:
         target_path = _safe_report_path(filename)
         target_path.write_text(content, encoding="utf-8")
@@ -131,12 +143,8 @@ def write_report(filename: str, content: str) -> str:
 
 @tool
 def knowledge_search(query: str) -> str:
-    """Search the local PDF knowledge base (hybrid semantic + BM25, then reranking).
-
-    Use for questions about material covered by ingested documents (RAG, LangChain, LLMs, etc.).
-    Requires a prior ingest (`make ingest-langchain` or `make ingest-llama`) matching
-    KNOWLEDGE_FLAVOUR in .env.
-    """
+    """Query the local hybrid (vector + BM25 + rerank) knowledge base built from ingested PDFs.
+    Запитує локальну гібридну базу (вектор + BM25 + rerank) з проіндексованих PDF і обрізає відповідь."""
     result = _knowledge_backend_search(query)
     limit = settings.max_knowledge_chars
     if len(result) <= limit:
@@ -145,3 +153,4 @@ def knowledge_search(query: str) -> str:
 
 
 TOOLS = [web_search, read_url, write_report, knowledge_search]
+# TOOLS = [write_report, knowledge_search]

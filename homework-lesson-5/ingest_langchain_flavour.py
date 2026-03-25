@@ -1,4 +1,5 @@
-"""Ingest PDFs from data/ into Chroma using LangChain (OpenAI embeddings)."""
+"""Script to ingest PDFs from data/ into a persistent Chroma store via LangChain embeddings.
+Скрипт інжесту PDF з data/ у персистентне сховище Chroma через ембеддинги LangChain."""
 
 from __future__ import annotations
 
@@ -12,6 +13,8 @@ from kb_common import index_dir, load_langchain_documents, split_langchain_docum
 
 
 def main() -> None:
+    """Rebuild the Chroma index from PDFs in data/ using the LangChain ingestion pipeline.
+    Перебудовує індекс Chroma з PDF у data/ за допомогою пайплайну інжесту LangChain."""
     settings = Settings()
     target = index_dir(settings)
     if target.exists():
