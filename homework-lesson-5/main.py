@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+import argparse
+import logging
+
 from agent import AGENT_CONFIG, agent
 
 
@@ -11,7 +16,18 @@ def _extract_last_ai_message(messages: list) -> str:
 
 
 def main() -> None:
-    print("Research Agent (type 'exit' to quit)")
+    parser = argparse.ArgumentParser(description="RAG research agent (lesson 5)")
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Log at DEBUG and print full message list (tools + results) each turn",
+    )
+    args = parser.parse_args()
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG, format="%(levelname)s %(message)s")
+
+    print("RAG Research Agent (type 'exit' to quit)")
     print("-" * 40)
 
     while True:
@@ -32,6 +48,11 @@ def main() -> None:
             {"messages": [("user", user_input)]},
             config=AGENT_CONFIG,
         )
+        if args.debug:
+            print("\n--- debug: messages ---")
+            for msg in result.get("messages", []):
+                print(msg)
+            print("--- end debug ---\n")
         print(f"\nAgent: {_extract_last_ai_message(result['messages'])}")
 
 

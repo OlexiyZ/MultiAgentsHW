@@ -13,6 +13,17 @@ from config import BASE_DIR, Settings
 settings = Settings()
 
 
+def _knowledge_backend_search(query: str) -> str:
+    flavour = (settings.knowledge_flavour or "langchain").strip().lower()
+    if flavour in {"llama", "llamaindex"}:
+        from retriever_llama_flavour import hybrid_search_llama
+
+        return hybrid_search_llama(query, settings)
+    from retriever_langchain_flavour import hybrid_search_langchain
+
+    return hybrid_search_langchain(query, settings)
+
+
 def _clip_text(text: str, limit: int) -> str:
     normalized = " ".join(text.split())
     if len(normalized) <= limit:
@@ -118,4 +129,19 @@ def write_report(filename: str, content: str) -> str:
     return f"Report saved to {target_path}"
 
 
-TOOLS = [web_search, read_url, write_report]
+@tool
+def knowledge_search(query: str) -> str:
+    """Search the local PDF knowledge base (hybrid semantic + BM25, then reranking).
+
+    Use for questions about material covered by ingested documents (RAG, LangChain, LLMs, etc.).
+    Requires a prior ingest (`make ingest-langchain` or `make ingest-llama`) matching
+    KNOWLEDGE_FLAVOUR in .env.
+    """
+    result = _knowledge_backend_search(query)
+    limit = settings.max_knowledge_chars
+    if len(result) <= limit:
+        return result
+    return result[: max(limit - 3, 0)].rstrip() + "..."
+
+
+TOOLS = [web_search, read_url, write_report, knowledge_search]
