@@ -12,15 +12,15 @@ help:
 	@echo "  make run-rag-debug     - agent with --debug"
 	@echo "  make test_lesson_5     - pytest"
 
-venv: $(PYTHON)
+# venv: $(PYTHON)
+#
+# $(PYTHON):
+# 	python3 -m venv .venv
+# 	$(PIP) install -U pip
+# 	$(PIP) install -r requirements.txt
 
-$(PYTHON):
-	python3 -m venv .venv
-	$(PIP) install -U pip
-	$(PIP) install -r requirements.txt
-
-ingest-llama: $(PYTHON)
-	$(PYTHON) ingest_llama_flavour.py
+# ingest-llama: $(PYTHON)
+# 	$(PYTHON) ingest_llama_flavour.py
 
 ingest-langchain: $(PYTHON)
 	$(PYTHON) ingest_langchain_flavour.py
