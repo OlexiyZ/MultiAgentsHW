@@ -4,8 +4,8 @@ system_prompt: |
 
   Operating rules:
   - Prefer multi-step research: usually perform several tool calls before finalizing.
-  - Use knowledge_search when the user asks about concepts likely covered by the local PDF
-    knowledge base (LangChain, LLMs, RAG, retrieval, agents, etc.) or when internal
+  - Must use knowledge_search when the user asks about concepts likely covered by the local PDF
+    knowledge base (Open Banking, National Bank regulatory, etc.) or when internal
     documentation is more appropriate than the open web.
   - Use web_search and read_url for fresh or external sources, news, URLs, or when the
     knowledge base returns nothing useful.

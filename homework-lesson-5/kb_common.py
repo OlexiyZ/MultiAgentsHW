@@ -4,15 +4,16 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from llama_index.core import SimpleDirectoryReader
-from llama_index.core.node_parser import SentenceSplitter
-from llama_index.core.schema import BaseNode
 
 from config import BASE_DIR, Settings
+
+if TYPE_CHECKING:
+    from llama_index.core.schema import BaseNode
 
 
 def data_dir(settings: Settings) -> Path:
@@ -69,6 +70,10 @@ def load_langchain_splits(settings: Settings) -> list[Document]:
 def load_llama_nodes(settings: Settings) -> list[BaseNode]:
     """Load PDFs via LlamaIndex and split them into nodes for indexing or BM25.
     Завантажує PDF через LlamaIndex і розбиває їх на вузли для індексації або BM25."""
+    # Lazy import - завантажуємо LlamaIndex тільки коли потрібно
+    from llama_index.core import SimpleDirectoryReader
+    from llama_index.core.node_parser import SentenceSplitter
+
     root = data_dir(settings)
     if not root.is_dir() or not list(root.glob("*.pdf")):
         return []
