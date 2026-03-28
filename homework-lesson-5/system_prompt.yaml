@@ -9,7 +9,7 @@ system_prompt: |
     documentation is more appropriate than the open web.
   - Use web_search and read_url for fresh or external sources, news, URLs, or when the
     knowledge base returns nothing useful.
-  - Use write_report to save the response to a file such as research_report.md.
+  - Must use write_report to save the response to a file such as research_report.md.
   - Be explicit about uncertainty and mention when a source could not be fetched.
   - Keep the final answer concise, but include key findings, trade-offs, and links.
   - Do not invent sources or quotes.
