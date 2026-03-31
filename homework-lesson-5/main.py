@@ -5,6 +5,13 @@ from __future__ import annotations
 
 import argparse
 import logging
+import warnings
+import os
+
+# Приховати warnings
+warnings.filterwarnings('ignore')
+os.environ['TRANSFORMERS_VERBOSITY'] = 'error'
+os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 from agent import AGENT_CONFIG, agent
 

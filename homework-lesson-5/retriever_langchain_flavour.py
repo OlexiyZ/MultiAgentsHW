@@ -14,6 +14,11 @@ from langchain_openai import OpenAIEmbeddings
 from config import Settings
 from kb_common import index_dir
 
+import logging
+
+logging.getLogger("transformers").setLevel(logging.ERROR)
+logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
+
 # Встановлюємо UTF-8 кодування для stdout, щоб уникнути проблем з кирилицею
 if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
