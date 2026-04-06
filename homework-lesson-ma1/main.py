@@ -9,7 +9,7 @@ from __future__ import annotations
 import argparse
 import logging
 
-from agent import AGENT_CONFIG, agent, agent_multi, AGENT_MULTI_CONFIG
+from agent import agent_multi, AGENT_MULTI_CONFIG    # AGENT_CONFIG, agent
 
 
 def _extract_last_ai_message(messages: list) -> str:
@@ -43,17 +43,23 @@ def main() -> None:
         logging.basicConfig(level=logging.DEBUG, format="%(levelname)s %(message)s")
 
     # Select agent mode
-    if args.multi_agent:
-        selected_agent = agent_multi
-        selected_config = AGENT_MULTI_CONFIG
-        mode_name = "Multi-Agent"
-        print("Multi-Agent RAG Research System (type 'exit' to quit)")
-        print("Agents: Supervisor, Researcher, Knowledge Expert, Report Writer")
-    else:
-        selected_agent = agent
-        selected_config = AGENT_CONFIG
-        mode_name = "Single-Agent"
-        print("RAG Research Agent (type 'exit' to quit)")
+    # if args.multi_agent:
+    #     selected_agent = agent_multi
+    #     selected_config = AGENT_MULTI_CONFIG
+    #     mode_name = "Multi-Agent"
+    #     print("Multi-Agent RAG Research System (type 'exit' to quit)")
+    #     print("Agents: Supervisor, Researcher, Knowledge Expert, Report Writer")
+    # else:
+    #     selected_agent = agent
+    #     selected_config = AGENT_CONFIG
+    #     mode_name = "Single-Agent"
+    #     print("RAG Research Agent (type 'exit' to quit)")
+
+    selected_agent = agent_multi
+    selected_config = AGENT_MULTI_CONFIG
+    mode_name = "Multi-Agent"
+    print("Multi-Agent RAG Research System (type 'exit' to quit)")
+    print("Agents: Supervisor, Researcher, Knowledge Expert, Report Writer")
 
     print("-" * 60)
 
