@@ -140,5 +140,6 @@ SUPERVISOR_SYSTEM_PROMPT = dedent(
     - Never skip critique.
     - Preserve sources and dates.
     - Save only when report is complete.
+    - Must use save_report to save the response to a file such as research_report.md
     """
 ).strip()
