@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import logging
+
 from langchain_chroma import Chroma
 from langchain_community.retrievers import BM25Retriever
 from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
 
-from config import Settings
+from config import Settings, preview_for_log
 from kb_common import index_dir
+
+
+logger = logging.getLogger(__name__)
 
 
 def reciprocal_rank_fusion(
@@ -46,6 +51,7 @@ def hybrid_search(query: str, settings: Settings | None = None) -> str:
     settings = settings or Settings()
     idx = index_dir(settings)
     if not idx.is_dir():
+        logger.warning("Retriever: index directory missing: %s", idx)
         return (
             "Локальний індекс не знайдено. Спочатку виконайте `python ingest.py` "
             "після додавання PDF у каталог data/."
@@ -64,6 +70,7 @@ def hybrid_search(query: str, settings: Settings | None = None) -> str:
     collection = store._collection
     all_data = collection.get(include=["documents", "metadatas"])
     if not all_data["documents"]:
+        logger.warning("Retriever: Chroma collection has no documents")
         return (
             "База знань порожня: у data/ немає PDF або не вдалося їх прочитати. "
             "Додайте файли та запустіть інжест."
@@ -86,6 +93,13 @@ def hybrid_search(query: str, settings: Settings | None = None) -> str:
     )
     top_hits = fused[: settings.rerank_top_n]
     text = _format_hits(top_hits)
+    logger.debug(
+        "Retriever hybrid_search: query=%s fused=%d top=%d out_chars=%d",
+        preview_for_log(query, 300),
+        len(fused),
+        len(top_hits),
+        len(text),
+    )
 
     limit = settings.max_knowledge_chars
     if len(text) <= limit:

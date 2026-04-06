@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import json
+import logging
 
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 
-from config import CRITIC_SYSTEM_PROMPT, Settings
+from config import CRITIC_SYSTEM_PROMPT, Settings, preview_for_log
 from schemas import CritiqueResult
 from tools import RESEARCH_TOOLS
 
+
+logger = logging.getLogger(__name__)
 
 settings = Settings()
 llm = ChatOpenAI(
@@ -27,16 +30,33 @@ critic_agent = create_agent(
 
 def critique_findings(findings: str) -> CritiqueResult:
     """Runs the critic agent on research text and returns a validated CritiqueResult.
-    Запускає критичного агента на тексті дослідження й повертає перевірений CritiqueResult."""
+    Запускає агента-критика на тексті дослідження й повертає перевірений CritiqueResult."""
 
+    logger.info(
+        "CriticAgent: invoke start findings_chars=%d preview=%s",
+        len(findings),
+        preview_for_log(findings, 300),
+    )
     result = critic_agent.invoke({"messages": [("user", findings)]})
     structured = result.get("structured_response")
     if isinstance(structured, CritiqueResult):
+        logger.info(
+            "CriticAgent: invoke end verdict=%s fresh=%s complete=%s structured=%s",
+            structured.verdict,
+            structured.is_fresh,
+            structured.is_complete,
+            structured.is_well_structured,
+        )
         return structured
     if hasattr(structured, "model_dump"):
-        return CritiqueResult.model_validate(structured.model_dump())
+        out = CritiqueResult.model_validate(structured.model_dump())
+        logger.info("CriticAgent: invoke end verdict=%s", out.verdict)
+        return out
     if isinstance(structured, dict):
-        return CritiqueResult.model_validate(structured)
+        out = CritiqueResult.model_validate(structured)
+        logger.info("CriticAgent: invoke end verdict=%s", out.verdict)
+        return out
+    logger.warning("CriticAgent: structured_response missing; using fallback critique")
     return CritiqueResult(
         verdict="REVISE",
         is_fresh=False,

@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import logging
+
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 
-from config import RESEARCH_SYSTEM_PROMPT, Settings
+from config import RESEARCH_SYSTEM_PROMPT, Settings, preview_for_log
 from tools import RESEARCH_TOOLS
 
+
+logger = logging.getLogger(__name__)
 
 settings = Settings()
 llm = ChatOpenAI(
@@ -35,5 +39,9 @@ def research_request(request: str) -> str:
     """Runs the research agent and returns its final assistant text as findings.
     Запускає дослідницького агента й повертає фінальний текст асистента як знахідки."""
 
+    logger.info("ResearchAgent: invoke start request=%s", preview_for_log(request))
     result = research_agent.invoke({"messages": [("user", request)]})
-    return _extract_last_ai_message(result.get("messages", []))
+    text = _extract_last_ai_message(result.get("messages", []))
+    logger.info("ResearchAgent: invoke end output_chars=%d", len(text))
+    logger.debug("ResearchAgent: output preview=%s", preview_for_log(text, 800))
+    return text

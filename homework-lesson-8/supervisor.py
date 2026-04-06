@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from langchain.agents import create_agent
 from langchain.agents.middleware import HumanInTheLoopMiddleware
 from langchain_core.tools import tool
@@ -9,9 +11,11 @@ from langgraph.checkpoint.memory import InMemorySaver
 from agents.critic import critique_findings_json
 from agents.planner import plan_request_json
 from agents.research import research_request
-from config import SUPERVISOR_SYSTEM_PROMPT, Settings
+from config import SUPERVISOR_SYSTEM_PROMPT, Settings, preview_for_log
 from tools import save_report
 
+
+logger = logging.getLogger(__name__)
 
 settings = Settings()
 llm = ChatOpenAI(
@@ -26,7 +30,10 @@ def plan(request: str) -> str:
     """Build a structured research plan for the request.
     Формує структурований план дослідження для запиту."""
 
-    return plan_request_json(request)
+    logger.info("Supervisor tool plan: start request=%s", preview_for_log(request))
+    out = plan_request_json(request)
+    logger.info("Supervisor tool plan: done json_chars=%d", len(out))
+    return out
 
 
 @tool
@@ -34,7 +41,10 @@ def research(request: str) -> str:
     """Run research with web and knowledge tools.
     Виконує дослідження з веб-пошуком та пошуком у локальній базі знань."""
 
-    return research_request(request)
+    logger.info("Supervisor tool research: start request=%s", preview_for_log(request))
+    out = research_request(request)
+    logger.info("Supervisor tool research: done output_chars=%d", len(out))
+    return out
 
 
 @tool
@@ -42,7 +52,14 @@ def critique(findings: str) -> str:
     """Critique findings and return a structured verdict as JSON.
     Оцінює знахідки й повертає структурований вердикт у вигляді JSON."""
 
-    return critique_findings_json(findings)
+    logger.info(
+        "Supervisor tool critique: start findings_chars=%d preview=%s",
+        len(findings),
+        preview_for_log(findings, 300),
+    )
+    out = critique_findings_json(findings)
+    logger.info("Supervisor tool critique: done json_chars=%d", len(out))
+    return out
 
 
 memory = InMemorySaver()

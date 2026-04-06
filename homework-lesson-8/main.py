@@ -1,12 +1,19 @@
 from __future__ import annotations
 
+from config import configure_logging, preview_for_log
+
+configure_logging()
+
 import argparse
 import json
+import logging
 from typing import Any
 
 from langgraph.types import Command
 
 from supervisor import SUPERVISOR_CONFIG, supervisor
+
+logger = logging.getLogger(__name__)
 
 
 def _extract_last_ai_message(messages: list[Any]) -> str:
@@ -68,6 +75,11 @@ def _resume_with_decision(
     """Resumes the checkpointed supervisor graph with a single HITL decision payload.
     Відновлює граф супервізора з checkpointer за одним рішенням HITL."""
 
+    logger.info(
+        "Supervisor resume: thread_id=%s decision=%s",
+        thread_id,
+        decision,
+    )
     return supervisor.invoke(
         Command(resume={"decisions": [decision]}),
         config={"configurable": {"thread_id": thread_id}},
@@ -85,6 +97,11 @@ def _handle_interrupt(thread_id: str, result: dict[str, Any]) -> dict[str, Any]:
             return current
 
         action = _extract_action_data(interrupt)
+        logger.info(
+            "HITL interrupt: tool=%s args_preview=%s",
+            action.get("tool"),
+            preview_for_log(json.dumps(action.get("args", {}), ensure_ascii=False), 600),
+        )
         _print_pending_action(action)
 
         while True:
@@ -148,9 +165,26 @@ def main() -> None:
         config = dict(SUPERVISOR_CONFIG)
         config["configurable"] = {"thread_id": args.thread_id}
 
-        result = supervisor.invoke(
-            {"messages": [("user", user_input)]},
-            config=config,
+        logger.info(
+            "Supervisor invoke: thread_id=%s recursion_limit=%s user=%s",
+            args.thread_id,
+            config.get("recursion_limit"),
+            preview_for_log(user_input),
+        )
+        try:
+            result = supervisor.invoke(
+                {"messages": [("user", user_input)]},
+                config=config,
+            )
+        except Exception:
+            logger.exception(
+                "Supervisor invoke failed (recursion_limit=%s)",
+                config.get("recursion_limit"),
+            )
+            raise
+        logger.debug(
+            "Supervisor invoke: raw result keys=%s",
+            list(result.keys()) if isinstance(result, dict) else type(result).__name__,
         )
 
         result = _handle_interrupt(args.thread_id, result)
