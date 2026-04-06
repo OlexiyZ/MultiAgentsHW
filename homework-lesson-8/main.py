@@ -11,6 +11,7 @@ from typing import Any
 
 from langgraph.types import Command
 
+from agent_metrics import get_agent_invoke_counts, reset_agent_invoke_counts
 from supervisor import SUPERVISOR_CONFIG, supervisor
 
 logger = logging.getLogger(__name__)
@@ -171,6 +172,7 @@ def main() -> None:
             config.get("recursion_limit"),
             preview_for_log(user_input),
         )
+        reset_agent_invoke_counts()
         try:
             result = supervisor.invoke(
                 {"messages": [("user", user_input)]},
@@ -188,6 +190,10 @@ def main() -> None:
         )
 
         result = _handle_interrupt(args.thread_id, result)
+        logger.info(
+            "Invoke counts (this user turn): %s",
+            get_agent_invoke_counts(),
+        )
         print(f"\nAgent: {_extract_last_ai_message(result.get('messages', []))}")
 
 

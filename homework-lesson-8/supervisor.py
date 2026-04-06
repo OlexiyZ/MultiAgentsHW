@@ -8,6 +8,7 @@ from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 
+from agent_metrics import record_supervisor_tool
 from agents.critic import critique_findings_json
 from agents.planner import plan_request_json
 from agents.research import research_request
@@ -31,6 +32,7 @@ def plan(request: str) -> str:
     Формує структурований план дослідження для запиту."""
 
     logger.info("Supervisor tool plan: start request=%s", preview_for_log(request))
+    record_supervisor_tool("plan")
     out = plan_request_json(request)
     logger.info("Supervisor tool plan: done json_chars=%d", len(out))
     return out
@@ -42,6 +44,7 @@ def research(request: str) -> str:
     Виконує дослідження з веб-пошуком та пошуком у локальній базі знань."""
 
     logger.info("Supervisor tool research: start request=%s", preview_for_log(request))
+    record_supervisor_tool("research")
     out = research_request(request)
     logger.info("Supervisor tool research: done output_chars=%d", len(out))
     return out
@@ -57,6 +60,7 @@ def critique(findings: str) -> str:
         len(findings),
         preview_for_log(findings, 300),
     )
+    record_supervisor_tool("critique")
     out = critique_findings_json(findings)
     logger.info("Supervisor tool critique: done json_chars=%d", len(out))
     return out

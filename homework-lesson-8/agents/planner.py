@@ -6,6 +6,7 @@ import logging
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 
+from agent_metrics import record_agent_invoke
 from config import PLANNER_SYSTEM_PROMPT, Settings, preview_for_log
 from schemas import ResearchPlan
 from tools import PLANNER_TOOLS
@@ -83,6 +84,7 @@ def plan_request(request: str) -> ResearchPlan:
 
     logger.info("PlannerAgent: invoke start request=%s", preview_for_log(request))
     try:
+        record_agent_invoke("planner")
         result = planner_agent.invoke({"messages": [("user", request)]})
     except Exception as exc:
         if _is_structured_output_validation_error(exc):

@@ -5,6 +5,7 @@ import logging
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 
+from agent_metrics import record_agent_invoke
 from config import RESEARCH_SYSTEM_PROMPT, Settings, preview_for_log
 from tools import RESEARCH_TOOLS
 
@@ -40,6 +41,7 @@ def research_request(request: str) -> str:
     Запускає дослідницького агента й повертає фінальний текст асистента як знахідки."""
 
     logger.info("ResearchAgent: invoke start request=%s", preview_for_log(request))
+    record_agent_invoke("research")
     result = research_agent.invoke({"messages": [("user", request)]})
     text = _extract_last_ai_message(result.get("messages", []))
     logger.info("ResearchAgent: invoke end output_chars=%d", len(text))

@@ -6,6 +6,7 @@ import logging
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 
+from agent_metrics import record_agent_invoke
 from config import CRITIC_SYSTEM_PROMPT, Settings, preview_for_log
 from schemas import CritiqueResult
 from tools import RESEARCH_TOOLS
@@ -37,6 +38,7 @@ def critique_findings(findings: str) -> CritiqueResult:
         len(findings),
         preview_for_log(findings, 300),
     )
+    record_agent_invoke("critic")
     result = critic_agent.invoke({"messages": [("user", findings)]})
     structured = result.get("structured_response")
     if isinstance(structured, CritiqueResult):

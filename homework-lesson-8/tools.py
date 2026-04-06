@@ -8,6 +8,7 @@ import trafilatura
 from ddgs import DDGS
 from langchain_core.tools import tool
 
+from agent_metrics import record_supervisor_tool
 from config import BASE_DIR, Settings, preview_for_log
 from retriever import hybrid_search
 
@@ -132,6 +133,7 @@ def save_report(filename: str, content: str) -> str:
         len(content),
         preview_for_log(content, 240),
     )
+    record_supervisor_tool("save_report")
     try:
         target = _safe_report_path(filename)
         target.write_text(content, encoding="utf-8")
