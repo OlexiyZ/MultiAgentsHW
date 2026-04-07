@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 import trafilatura
 from ddgs import DDGS
+from ddgs.exceptions import DDGSException
 from langchain_core.tools import tool
 
 from agent_metrics import record_supervisor_tool
@@ -58,6 +59,12 @@ def web_search(query: str) -> list[dict]:
     )
     try:
         raw_results = DDGS().text(query, max_results=search_limit)
+    except DDGSException as exc:
+        if str(exc).strip() == "No results found.":
+            logger.info("Tool web_search: no results")
+            return []
+        logger.exception("Tool web_search: failed")
+        return [{"error": f"Web search failed: {exc}"}]
     except Exception as exc:
         logger.exception("Tool web_search: failed")
         return [{"error": f"Web search failed: {exc}"}]
