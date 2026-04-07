@@ -27,11 +27,15 @@ llm = ChatOpenAI(
 
 
 @tool
-def plan(request: str) -> str:
+def plan(request: str, decision_reason: str = "") -> str:
     """Build a structured research plan for the request.
     Формує структурований план дослідження для запиту."""
 
-    logger.info("Supervisor tool plan: start request=%s", preview_for_log(request))
+    logger.info(
+        "Supervisor tool plan: reason=%s request=%s",
+        preview_for_log(decision_reason, 200),
+        preview_for_log(request),
+    )
     record_supervisor_tool("plan")
     out = plan_request_json(request)
     logger.info("Supervisor tool plan: done json_chars=%d", len(out))
@@ -39,11 +43,15 @@ def plan(request: str) -> str:
 
 
 @tool
-def research(request: str) -> str:
+def research(request: str, decision_reason: str = "") -> str:
     """Run research with web and knowledge tools.
     Виконує дослідження з веб-пошуком та пошуком у локальній базі знань."""
 
-    logger.info("Supervisor tool research: start request=%s", preview_for_log(request))
+    logger.info(
+        "Supervisor tool research: reason=%s request=%s",
+        preview_for_log(decision_reason, 200),
+        preview_for_log(request),
+    )
     record_supervisor_tool("research")
     out = research_request(request)
     logger.info("Supervisor tool research: done output_chars=%d", len(out))
@@ -51,12 +59,13 @@ def research(request: str) -> str:
 
 
 @tool
-def critique(findings: str) -> str:
+def critique(findings: str, decision_reason: str = "") -> str:
     """Critique findings and return a structured verdict as JSON.
     Оцінює знахідки й повертає структурований вердикт у вигляді JSON."""
 
     logger.info(
-        "Supervisor tool critique: start findings_chars=%d preview=%s",
+        "Supervisor tool critique: reason=%s findings_chars=%d preview=%s",
+        preview_for_log(decision_reason, 200),
         len(findings),
         preview_for_log(findings, 300),
     )

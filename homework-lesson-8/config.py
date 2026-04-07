@@ -269,6 +269,8 @@ SUPERVISOR_SYSTEM_PROMPT = dedent(
        - call save_report(filename, content).
 
     Important:
+    - Every tool call must include decision_reason: a short explanation of why that
+      tool is the correct next step.
     - After plan() has been called once for the current user goal, do not call plan() again.
       Reuse that plan for any revise rounds unless the user explicitly asks to replan or
       changes the task scope.
