@@ -20,6 +20,38 @@ class Settings(BaseSettings):
         default="gpt-4o-mini",
         validation_alias=AliasChoices("MODEL_NAME", "model_name"),
     )
+    supervisor_model_name: str = Field(
+        default="gpt-5.4-mini",
+        validation_alias=AliasChoices(
+            "SUPERVISOR_MODEL_NAME",
+            "MODEL_NAME",
+            "supervisor_model_name",
+        ),
+    )
+    planner_model_name: str = Field(
+        default="gpt-5.4-mini",
+        validation_alias=AliasChoices(
+            "PLANNER_MODEL_NAME",
+            "MODEL_NAME",
+            "planner_model_name",
+        ),
+    )
+    research_model_name: str = Field(
+        default="gpt-5.4-mini",
+        validation_alias=AliasChoices(
+            "RESEARCH_MODEL_NAME",
+            "MODEL_NAME",
+            "research_model_name",
+        ),
+    )
+    critic_model_name: str = Field(
+        default="gpt-5.4",
+        validation_alias=AliasChoices(
+            "CRITIC_MODEL_NAME",
+            "MODEL_NAME",
+            "critic_model_name",
+        ),
+    )
     embedding_model: str = Field(
         default="text-embedding-3-large",
         validation_alias=AliasChoices("EMBEDDING_MODEL", "embedding_model"),
@@ -39,13 +71,13 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("RERANKER_MODEL"),
     )
     retrieval_vector_k: int = Field(
-        default=10, validation_alias=AliasChoices("RETRIEVAL_VECTOR_K")
+        default=5, validation_alias=AliasChoices("RETRIEVAL_VECTOR_K")
     )
     retrieval_bm25_k: int = Field(
-        default=10, validation_alias=AliasChoices("RETRIEVAL_BM25_K")
+        default=5, validation_alias=AliasChoices("RETRIEVAL_BM25_K")
     )
     retrieval_fusion_top_n: int = Field(
-        default=20,
+        default=5,
         validation_alias=AliasChoices("RETRIEVAL_FUSION_TOP_N"),
     )
     rerank_top_n: int = Field(default=5, validation_alias=AliasChoices("RERANK_TOP_N"))
@@ -54,7 +86,7 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("MAX_KNOWLEDGE_CHARS"),
     )
     max_search_results: int = Field(
-        default=5, validation_alias=AliasChoices("MAX_SEARCH_RESULTS")
+        default=3, validation_alias=AliasChoices("MAX_SEARCH_RESULTS")
     )
     max_url_content_length: int = Field(
         default=5000, validation_alias=AliasChoices("MAX_URL_CONTENT_LENGTH")

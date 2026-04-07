@@ -66,7 +66,7 @@ def _is_structured_output_validation_error(exc: BaseException) -> bool:
 settings = Settings()
 llm = ChatOpenAI(
     api_key=settings.api_key.get_secret_value(),
-    model=settings.model_name,
+    model=settings.planner_model_name,
     timeout=settings.request_timeout,
 )
 

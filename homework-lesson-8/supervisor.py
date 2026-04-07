@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 settings = Settings()
 llm = ChatOpenAI(
     api_key=settings.api_key.get_secret_value(),
-    model=settings.model_name,
+    model=settings.supervisor_model_name,
     timeout=settings.request_timeout,
 )
 

@@ -43,11 +43,13 @@ def _safe_report_path(filename: str) -> Path:
 
 
 @tool
-def web_search(query: str, max_results: int | None = None) -> list[dict]:
+def web_search(query: str) -> list[dict]:
+    # def web_search(query: str, max_results: int | None = None) -> list[dict]:
     """Searches the web via DuckDuckGo and returns compact title, URL, and snippet dicts.
     Шукає в мережі через DuckDuckGo й повертає стислі словники з заголовком, URL і сніпетом."""
 
-    search_limit = max_results or settings.max_search_results
+    search_limit = settings.max_search_results
+    # search_limit = max_results or settings.max_search_results
     search_limit = max(1, min(search_limit, 10))
     logger.info(
         "Tool web_search: query=%r max_results=%s",
