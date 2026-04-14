@@ -4,6 +4,12 @@ Root conftest.py for homework-lesson-10 test suite.
 Adds homework-lesson-8 to sys.path so that agents, schemas, tools, etc.
 can be imported without installation, and loads the lesson-8 .env file so
 that API keys (OPENAI_API_KEY, etc.) are available to any test that needs them.
+
+Кореневий conftest.py для тестового набору homework-lesson-10.
+
+Додає homework-lesson-8 до sys.path, щоб agents, schemas, tools тощо можна
+було імпортувати без встановлення, і завантажує .env файл lesson-8, щоб
+API-ключі (OPENAI_API_KEY тощо) були доступні тестам, які їх потребують.
 """
 import sys
 import os
