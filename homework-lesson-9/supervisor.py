@@ -4,8 +4,8 @@ import asyncio
 import logging
 
 import httpx
-from acp_sdk.models import Message, MessagePart, Run, RunMode
-from acp_sdk.models.schemas import RunCreateRequest
+from acp_sdk.client import Client as ACPClient
+from acp_sdk.models import Run
 from langchain.agents import create_agent
 from langchain.agents.middleware import HumanInTheLoopMiddleware
 from langchain_core.tools import BaseTool, tool
@@ -56,23 +56,13 @@ def _run_output_text(run: Run) -> str:
 
 def _acp_sync(agent_name: str, text: str) -> str:
     async def _go() -> str:
-        request = RunCreateRequest(
-            agent_name=agent_name,
-            input=[Message(parts=[MessagePart(content=text)])],
-            mode=RunMode.SYNC,
-        )
-        # Default httpx timeout (~5s) is too short: ACP agents run LLM + MCP (SearchMCP).
+        # ACP agents run LLM + MCP (SearchMCP), so use an explicit longer timeout.
         timeout = httpx.Timeout(settings.acp_http_timeout)
-        async with httpx.AsyncClient(
+        async with ACPClient(
             base_url=settings.acp_base_url,
             timeout=timeout,
         ) as client:
-            response = await client.post(
-                "/runs",
-                json=request.model_dump(mode="json"),
-            )
-            response.raise_for_status()
-            run = Run.model_validate(response.json())
+            run = await client.run_sync(text, agent=agent_name)
             run.raise_for_status()
             return _run_output_text(run)
 
