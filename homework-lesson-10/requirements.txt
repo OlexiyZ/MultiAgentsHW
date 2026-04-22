@@ -1,4 +1,4 @@
-# ── lesson-8 runtime dependencies ──────────────────────────────────────────
+# ── lesson-10 runtime dependencies ─────────────────────────────────────────
 chromadb>=0.5.0
 pypdf>=5.0.0
 langchain-text-splitters>=1.0.0

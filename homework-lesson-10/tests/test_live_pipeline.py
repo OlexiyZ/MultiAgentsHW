@@ -1,15 +1,15 @@
 """
-Live DeepEval test for the real homework-lesson-8 agent pipeline.
+Live DeepEval test for the real homework-lesson-10 agent pipeline.
 
-Живий DeepEval-тест для реального pipeline агентів з homework-lesson-8.
+Живий DeepEval-тест для реального pipeline агентів з homework-lesson-10.
 
 This file intentionally does not run by default: it calls the real Planner,
-Researcher, and Critic agents from homework-lesson-8, so it needs API keys,
-network access, and the prepared lesson-8 knowledge base.
+Researcher, and Critic agents from homework-lesson-10, so it needs API keys,
+network access, and the prepared lesson-10 knowledge base.
 
 Цей файл навмисно не запускається за замовчуванням: він викликає реальних
-агентів Planner, Researcher і Critic з homework-lesson-8, тому потребує
-API-ключів, доступу до мережі та підготовленої бази знань lesson-8.
+агентів Planner, Researcher і Critic з homework-lesson-10, тому потребує
+API-ключів, доступу до мережі та підготовленої бази знань lesson-10.
 """
 from __future__ import annotations
 
@@ -66,8 +66,8 @@ live_correctness = GEval(
 
 
 def _build_research_request(user_request: str, plan_json: str) -> str:
-    # Keep the real lesson-8 Researcher in charge, but pass the Planner output explicitly.
-    # Залишаємо реального Researcher з lesson-8 відповідальним за роботу, але явно передаємо план Planner.
+    # Keep the real lesson-10 Researcher in charge, but pass the Planner output explicitly.
+    # Залишаємо реального Researcher з lesson-10 відповідальним за роботу, але явно передаємо план Planner.
     return (
         "Виконай дослідження українською мовою для запиту користувача.\n\n"
         f"Запит користувача:\n{user_request}\n\n"
@@ -85,13 +85,13 @@ def _build_critic_request(user_request: str, findings: str) -> str:
     )
 
 
-def test_live_lesson8_pipeline_planner_researcher_critic() -> None:
-    # This test runs the real lesson-8 Planner -> Researcher -> Critic pipeline.
-    # Цей тест запускає реальний pipeline lesson-8: Planner -> Researcher -> Critic.
+def test_live_lesson10_pipeline_planner_researcher_critic() -> None:
+    # This test runs the real lesson-10 Planner -> Researcher -> Critic pipeline.
+    # Цей тест запускає реальний pipeline lesson-10: Planner -> Researcher -> Critic.
     """
-    Runs the real lesson-8 pipeline and evaluates the generated output with DeepEval.
+    Runs the real lesson-10 pipeline and evaluates the generated output with DeepEval.
 
-    Запускає реальний pipeline lesson-8 і оцінює згенеровану відповідь через DeepEval.
+    Запускає реальний pipeline lesson-10 і оцінює згенеровану відповідь через DeepEval.
     """
     from agent_metrics import get_agent_invoke_counts, reset_agent_invoke_counts
     from agents.critic import critique_findings

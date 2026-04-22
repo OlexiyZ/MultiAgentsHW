@@ -1,6 +1,6 @@
 # Домашнє завдання: тестування мультиагентної системи (розширення hw8)
 
-Напишіть автоматизовані тести для вашої мультиагентної системи з `homework-lesson-8`, використовуючи DeepEval та підходи з Лекції 10.
+Напишіть автоматизовані тести для мультиагентної системи, файли якої тепер зібрано безпосередньо в `homework-lesson-10`, використовуючи DeepEval та підходи з Лекції 10.
 
 ---
 
@@ -158,7 +158,7 @@ homework-lesson-10/
 │   ├── test_critic.py            # Critic agent tests
 │   ├── test_tools.py             # Tool correctness tests
 │   └── test_e2e.py               # End-to-end evaluation on golden dataset
-├── ... (all files from homework-lesson-8)
+├── ... (runtime-файли, перенесені з homework-lesson-8)
 └── README.md
 ```
 
