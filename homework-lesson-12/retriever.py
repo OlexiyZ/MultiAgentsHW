@@ -9,6 +9,7 @@ from langchain_openai import OpenAIEmbeddings
 
 from config import Settings, preview_for_log
 from kb_common import index_dir
+from tracing import build_langchain_config, observe
 
 
 logger = logging.getLogger(__name__)
@@ -44,6 +45,7 @@ def _format_hits(documents: list[Document]) -> str:
     return "\n\n".join(parts)
 
 
+@observe()
 def hybrid_search(query: str, settings: Settings | None = None) -> str:
     """Runs vector + BM25 retrieval over Chroma, fuses results, and returns a trimmed Markdown string.
     Виконує векторний і BM25-пошук у Chroma, зливає результати й повертає обрізаний Markdown-текст."""
@@ -84,7 +86,10 @@ def hybrid_search(query: str, settings: Settings | None = None) -> str:
     vector_hits = store.similarity_search(query, k=settings.retrieval_vector_k)
     bm25 = BM25Retriever.from_documents(splits)
     bm25.k = settings.retrieval_bm25_k
-    bm25_hits = bm25.invoke(query)
+    bm25_hits = bm25.invoke(
+        query,
+        config=build_langchain_config(run_name="bm25_retriever"),
+    )
 
     fused = reciprocal_rank_fusion(
         vector_hits,

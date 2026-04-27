@@ -98,6 +98,29 @@ class Settings(BaseSettings):
     request_timeout: int = Field(
         default=90, validation_alias=AliasChoices("REQUEST_TIMEOUT")
     )
+    langfuse_enabled: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("LANGFUSE_ENABLED", "langfuse_enabled"),
+    )
+    langfuse_public_key: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices("LANGFUSE_PUBLIC_KEY", "langfuse_public_key"),
+    )
+    langfuse_secret_key: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices("LANGFUSE_SECRET_KEY", "langfuse_secret_key"),
+    )
+    langfuse_base_url: str = Field(
+        default="https://us.cloud.langfuse.com",
+        validation_alias=AliasChoices("LANGFUSE_BASE_URL", "langfuse_base_url"),
+    )
+    langfuse_default_tags: str = Field(
+        default="mas,lesson-12",
+        validation_alias=AliasChoices(
+            "LANGFUSE_DEFAULT_TAGS",
+            "langfuse_default_tags",
+        ),
+    )
     log_level: str = Field(
         default="INFO",
         validation_alias=AliasChoices("LOG_LEVEL", "log_level"),

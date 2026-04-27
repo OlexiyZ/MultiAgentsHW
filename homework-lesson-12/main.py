@@ -13,6 +13,14 @@ from langgraph.types import Command
 
 from agent_metrics import get_agent_invoke_counts, reset_agent_invoke_counts
 from supervisor import SUPERVISOR_CONFIG, supervisor
+from tracing import (
+    build_langchain_config,
+    default_trace_tags,
+    default_user_id,
+    flush_langfuse,
+    mas_trace,
+    observe,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +91,10 @@ def _resume_with_decision(
     )
     return supervisor.invoke(
         Command(resume={"decisions": [decision]}),
-        config={"configurable": {"thread_id": thread_id}},
+        config=build_langchain_config(
+            {"configurable": {"thread_id": thread_id}},
+            run_name="supervisor_resume",
+        ),
     )
 
 
@@ -135,6 +146,36 @@ def _handle_interrupt(thread_id: str, result: dict[str, Any]) -> dict[str, Any]:
         )
 
 
+@observe()
+def _run_supervisor_turn(
+    *,
+    user_input: str,
+    thread_id: str,
+    session_id: str,
+    user_id: str,
+    tags: list[str],
+    config: dict[str, Any],
+) -> dict[str, Any]:
+    with mas_trace(
+        trace_name="mas_supervisor_turn",
+        session_id=session_id,
+        user_id=user_id,
+        tags=tags,
+    ):
+        try:
+            result = supervisor.invoke(
+                {"messages": [("user", user_input)]},
+                config=build_langchain_config(
+                    config,
+                    run_name="supervisor_agent",
+                    extra_metadata={"thread_id": thread_id},
+                ),
+            )
+            return _handle_interrupt(thread_id, result)
+        finally:
+            flush_langfuse()
+
+
 def main() -> None:
     """Runs the interactive REPL for the multi-agent supervisor with HITL on save_report.
     Запускає інтерактивний REPL для мультиагентного супервізора з HITL на save_report."""
@@ -142,8 +183,24 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Lesson 10 multi-agent supervisor CLI")
     parser.add_argument(
         "--thread-id",
-        default="lesson-10-supervisor-cli",
+        default="lesson-12-supervisor-cli",
         help="Thread id for checkpointed conversation",
+    )
+    parser.add_argument(
+        "--session-id",
+        default=None,
+        help="Langfuse session id. Defaults to thread id.",
+    )
+    parser.add_argument(
+        "--user-id",
+        default=default_user_id(),
+        help="Langfuse user id for trace attribution.",
+    )
+    parser.add_argument(
+        "--tag",
+        action="append",
+        default=[],
+        help="Extra Langfuse trace tag. Repeat to pass multiple tags.",
     )
     args = parser.parse_args()
 
@@ -174,8 +231,12 @@ def main() -> None:
         )
         reset_agent_invoke_counts()
         try:
-            result = supervisor.invoke(
-                {"messages": [("user", user_input)]},
+            result = _run_supervisor_turn(
+                user_input=user_input,
+                thread_id=args.thread_id,
+                session_id=args.session_id or args.thread_id,
+                user_id=args.user_id,
+                tags=default_trace_tags() + list(args.tag),
                 config=config,
             )
         except Exception:
@@ -189,7 +250,6 @@ def main() -> None:
             list(result.keys()) if isinstance(result, dict) else type(result).__name__,
         )
 
-        result = _handle_interrupt(args.thread_id, result)
         logger.info(
             "Invoke counts (this user turn): %s",
             get_agent_invoke_counts(),

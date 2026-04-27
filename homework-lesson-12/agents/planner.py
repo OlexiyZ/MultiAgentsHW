@@ -6,9 +6,10 @@ import logging
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 
-from agent_metrics import record_agent_invoke
+# from agent_metrics import record_agent_invoke
 from config import PLANNER_SYSTEM_PROMPT, Settings, preview_for_log
 from schemas import ResearchPlan
+from tracing import build_langchain_config, observe
 from tools import PLANNER_TOOLS
 
 try:
@@ -78,6 +79,7 @@ planner_agent = create_agent(
 )
 
 
+@observe()
 def plan_request(request: str) -> ResearchPlan:
     """Runs the planner agent on a user request and returns a validated ResearchPlan.
     Запускає планувальника на запиті користувача й повертає перевірений ResearchPlan."""
@@ -85,7 +87,10 @@ def plan_request(request: str) -> ResearchPlan:
     logger.info("PlannerAgent: invoke start request=%s", preview_for_log(request))
     try:
         record_agent_invoke("planner")
-        result = planner_agent.invoke({"messages": [("user", request)]})
+        result = planner_agent.invoke(
+            {"messages": [("user", request)]},
+            config=build_langchain_config(run_name="planner_agent"),
+        )
     except Exception as exc:
         if _is_structured_output_validation_error(exc):
             logger.warning(
