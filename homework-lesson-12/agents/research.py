@@ -5,7 +5,7 @@ import logging
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 
-# from agent_metrics import record_agent_invoke
+from agent_metrics import record_agent_invoke
 from config import RESEARCH_SYSTEM_PROMPT, Settings, preview_for_log
 from tracing import build_langchain_config, observe
 from tools import RESEARCH_TOOLS
