@@ -111,3 +111,20 @@ LANGFUSE_BASE_URL=https://us.cloud.langfuse.com
 
 ### Що здавати
 - Папка `screenshots/` з 4 скріншотами з Langfuse UI
+
+---
+
+### Технічна примітка щодо evaluator-ів Langfuse
+
+Для цієї домашньої роботи проєкт залишає **LLM-as-a-Judge evaluator-и на рівні trace**, щоб відповідати критеріям приймання, сформульованим у цьому README:
+- автоматична оцінка нових **trace-ів**
+- перевірка через **Tracing -> Traces -> Scores**
+
+Оскільки trace-level evaluator-и Langfuse покладаються на trace input/output, runtime явно встановлює trace I/O для сумісності. Через це Langfuse SDK може показувати deprecation warning щодо trace-level API для input/output.
+
+Це попередження є очікуваним у поточній реалізації домашньої роботи й не означає, що інтеграція зламана.
+
+Рекомендований шлях міграції після прийняття домашньої роботи:
+- перейти з **Live Traces** на **Live Observations**
+- прибрати явні compatibility-виклики для trace input/output
+- залишити `propagate_attributes()` для `session_id`, `user_id` та `tags`

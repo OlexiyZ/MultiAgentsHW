@@ -20,6 +20,7 @@ from tracing import (
     flush_langfuse,
     mas_trace,
     observe,
+    set_current_trace_io,
 )
 
 logger = logging.getLogger(__name__)
@@ -163,6 +164,7 @@ def _run_supervisor_turn(
         tags=tags,
     ):
         try:
+            set_current_trace_io(input={"user_input": user_input, "thread_id": thread_id})
             result = supervisor.invoke(
                 {"messages": [("user", user_input)]},
                 config=build_langchain_config(
@@ -171,7 +173,11 @@ def _run_supervisor_turn(
                     extra_metadata={"thread_id": thread_id},
                 ),
             )
-            return _handle_interrupt(thread_id, result)
+            final_result = _handle_interrupt(thread_id, result)
+            set_current_trace_io(
+                output={"final_response": _extract_last_ai_message(final_result.get("messages", []))}
+            )
+            return final_result
         finally:
             flush_langfuse()
 

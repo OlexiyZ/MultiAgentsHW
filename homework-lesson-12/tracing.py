@@ -10,7 +10,12 @@ from typing import Any, Callable, Iterator
 from config import Settings
 
 try:
-    from langfuse import Langfuse, get_client, observe, propagate_attributes
+    from langfuse import (
+        Langfuse,
+        get_client,
+        observe,
+        propagate_attributes,
+    )
     from langfuse.langchain import CallbackHandler
 
     LANGFUSE_AVAILABLE = True
@@ -188,3 +193,15 @@ def flush_langfuse() -> None:
         get_client().flush()
     except Exception:  # pragma: no cover
         logger.exception("Langfuse flush failed")
+
+
+# Sets trace-level input/output for legacy trace evaluators in Langfuse.
+# Встановлює trace-level input/output для legacy trace evaluator-ів у Langfuse.
+def set_current_trace_io(*, input: Any | None = None, output: Any | None = None) -> None:
+    attrs = current_trace_attributes()
+    if not attrs or not attrs["enabled"]:
+        return
+    try:
+        get_client().set_current_trace_io(input=input, output=output)
+    except Exception:  # pragma: no cover
+        logger.exception("Langfuse set_current_trace_io failed")
