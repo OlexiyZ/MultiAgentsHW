@@ -7,7 +7,8 @@ from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 
 from agent_metrics import record_agent_invoke
-from config import PLANNER_SYSTEM_PROMPT, Settings, preview_for_log
+from config import Settings, preview_for_log
+from prompt_management import get_planner_system_prompt
 from schemas import ResearchPlan
 from tracing import build_langchain_config, observe
 from tools import PLANNER_TOOLS
@@ -74,7 +75,7 @@ llm = ChatOpenAI(
 planner_agent = create_agent(
     model=llm,
     tools=PLANNER_TOOLS,
-    system_prompt=PLANNER_SYSTEM_PROMPT,
+    system_prompt=get_planner_system_prompt(settings),
     response_format=ResearchPlan,
 )
 

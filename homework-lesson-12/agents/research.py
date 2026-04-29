@@ -6,7 +6,8 @@ from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 
 from agent_metrics import record_agent_invoke
-from config import RESEARCH_SYSTEM_PROMPT, Settings, preview_for_log
+from config import Settings, preview_for_log
+from prompt_management import get_research_system_prompt
 from tracing import build_langchain_config, observe
 from tools import RESEARCH_TOOLS
 
@@ -23,7 +24,7 @@ llm = ChatOpenAI(
 research_agent = create_agent(
     model=llm,
     tools=RESEARCH_TOOLS,
-    system_prompt=RESEARCH_SYSTEM_PROMPT,
+    system_prompt=get_research_system_prompt(settings),
 )
 
 

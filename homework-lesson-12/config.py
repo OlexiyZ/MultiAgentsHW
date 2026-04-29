@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import sys
 from pathlib import Path
-from textwrap import dedent
 
 from pydantic import AliasChoices, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -121,6 +120,41 @@ class Settings(BaseSettings):
             "langfuse_default_tags",
         ),
     )
+    langfuse_prompt_label: str = Field(
+        default="production",
+        validation_alias=AliasChoices(
+            "LANGFUSE_PROMPT_LABEL",
+            "langfuse_prompt_label",
+        ),
+    )
+    supervisor_prompt_name: str = Field(
+        default="lesson-12/supervisor-system",
+        validation_alias=AliasChoices(
+            "SUPERVISOR_PROMPT_NAME",
+            "supervisor_prompt_name",
+        ),
+    )
+    planner_prompt_name: str = Field(
+        default="lesson-12/planner-system",
+        validation_alias=AliasChoices(
+            "PLANNER_PROMPT_NAME",
+            "planner_prompt_name",
+        ),
+    )
+    research_prompt_name: str = Field(
+        default="lesson-12/research-system",
+        validation_alias=AliasChoices(
+            "RESEARCH_PROMPT_NAME",
+            "research_prompt_name",
+        ),
+    )
+    critic_prompt_name: str = Field(
+        default="lesson-12/critic-system",
+        validation_alias=AliasChoices(
+            "CRITIC_PROMPT_NAME",
+            "critic_prompt_name",
+        ),
+    )
     log_level: str = Field(
         default="INFO",
         validation_alias=AliasChoices("LOG_LEVEL", "log_level"),
@@ -222,86 +256,3 @@ def preview_for_log(text: str, limit: int = 400) -> str:
     if len(collapsed) <= limit:
         return collapsed
     return collapsed[: max(limit - 3, 0)].rstrip() + "..."
-
-
-PLANNER_SYSTEM_PROMPT = dedent(
-    """
-    You are Planner Agent in a multi-agent research workflow.
-    Goal:
-    - Understand the user's request.
-    - Run short exploratory lookups with tools when useful.
-    - Return only structured ResearchPlan.
-
-    Rules:
-    - Produce specific, searchable queries.
-    - Include both 'knowledge_base' and 'web' when freshness matters.
-    - Make output_format concrete (sections/table/checklist).
-    - Always populate every ResearchPlan field: goal, search_queries, sources_to_check, output_format
-      (never omit sources_to_check or output_format).
-    """
-).strip()
-
-
-RESEARCH_SYSTEM_PROMPT = dedent(
-    """
-    You are Research Agent.
-    Execute the research request using tools:
-    - knowledge_search for local indexed PDFs
-    - web_search for fresh facts
-    - read_url for deeper verification
-
-    Produce a clear markdown findings document with:
-    1) key findings
-    2) evidence and sources
-    3) explicit uncertainties / assumptions.
-    """
-).strip()
-
-
-CRITIC_SYSTEM_PROMPT = dedent(
-    """
-    You are Critic Agent in evaluator-optimizer loop.
-    Independently verify findings using tools before verdict.
-
-    Evaluate:
-    - Freshness: Are sources/data current relative to today's date?
-    - Completeness: Are all parts of user request covered?
-    - Structure: Are findings logically organized and report-ready?
-
-    Return only structured CritiqueResult.
-    If anything material is missing/outdated, return verdict=REVISE with concrete revision_requests.
-    """
-).strip()
-
-
-SUPERVISOR_SYSTEM_PROMPT = dedent(
-    """
-    You are Supervisor orchestrating Plan -> Research -> Critique.
-
-    Mandatory flow:
-    1) Call plan(request) first.
-    2) Call research(request) using the plan.
-    3) Call critique(findings) to evaluate result.
-    4) If verdict is REVISE:
-       - call research again only with a narrow request that targets the critic's concrete
-         revision_requests / gaps (do not redo full exploratory research)
-       - run critique again
-       - do at most 2 revision rounds.
-    5) If verdict is APPROVE:
-       - compile final markdown report
-       - call save_report(filename, content).
-
-    Important:
-    - Every tool call must include decision_reason: a short explanation of why that
-      tool is the correct next step.
-    - After plan() has been called once for the current user goal, do not call plan() again.
-      Reuse that plan for any revise rounds unless the user explicitly asks to replan or
-      changes the task scope.
-    - Do not run extra research passes "just in case". Additional research is allowed only
-      when critique returns REVISE and specifies what is missing; address only those gaps.
-    - Never skip critique.
-    - Preserve sources and dates.
-    - Save only when report is complete.
-    - Respond in the language of the request. If the request is in Russian, respond in Ukrainian.
-    """
-).strip()

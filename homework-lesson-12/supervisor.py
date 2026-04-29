@@ -12,7 +12,8 @@ from agent_metrics import record_supervisor_tool
 from agents.critic import critique_findings_json
 from agents.planner import plan_request_json
 from agents.research import research_request
-from config import SUPERVISOR_SYSTEM_PROMPT, Settings, preview_for_log
+from config import Settings, preview_for_log
+from prompt_management import get_supervisor_system_prompt
 from tools import save_report
 
 
@@ -80,7 +81,7 @@ memory = InMemorySaver()
 supervisor = create_agent(
     model=llm,
     tools=[plan, research, critique, save_report],
-    system_prompt=SUPERVISOR_SYSTEM_PROMPT,
+    system_prompt=get_supervisor_system_prompt(settings),
     middleware=[HumanInTheLoopMiddleware(interrupt_on={"save_report": True})],
     checkpointer=memory,
 )
