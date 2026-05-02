@@ -7,7 +7,6 @@ import subprocess
 import tempfile
 import zipfile
 from html import unescape
-from html.parser import HTMLParser
 from pathlib import Path
 from xml.etree import ElementTree
 
@@ -102,30 +101,14 @@ ISSUER_RULES: tuple[tuple[str, str, tuple[str, ...]], ...] = (
 )
 
 
-class _TextHTMLParser(HTMLParser):
-    def __init__(self) -> None:
-        super().__init__()
-        self._skip_depth = 0
-        self._parts: list[str] = []
+def ingest_tag_filters(settings: Settings) -> set[str]:
+    """Returns normalized ingest tag filters from settings."""
 
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if tag in {"script", "style", "noscript"}:
-            self._skip_depth += 1
-        if tag in {"br", "p", "div", "tr", "li", "pre", "h1", "h2", "h3"}:
-            self._parts.append("\n")
-
-    def handle_endtag(self, tag: str) -> None:
-        if tag in {"script", "style", "noscript"} and self._skip_depth:
-            self._skip_depth -= 1
-        if tag in {"p", "div", "tr", "li", "pre", "h1", "h2", "h3"}:
-            self._parts.append("\n")
-
-    def handle_data(self, data: str) -> None:
-        if not self._skip_depth:
-            self._parts.append(data)
-
-    def text(self) -> str:
-        return _normalize_text(unescape("".join(self._parts)))
+    return {
+        tag.strip().casefold()
+        for tag in settings.ingest_tag_filters.split(",")
+        if tag.strip()
+    }
 
 
 def data_dir(settings: Settings) -> Path:
@@ -147,19 +130,12 @@ def _normalize_text(text: str) -> str:
 
 
 def _decode_text(raw: bytes) -> str:
-    encodings = ("utf-8-sig", "utf-8", "cp1251", "windows-1251", "cp866", "latin-1")
-    best = ""
-    best_score = -1
-    for encoding in encodings:
+    for encoding in ("utf-8-sig", "utf-8", "cp1251"):
         try:
-            text = raw.decode(encoding)
+            return raw.decode(encoding)
         except UnicodeDecodeError:
             continue
-        score = sum("а" <= char.casefold() <= "я" or char in "іїєґІЇЄҐ" for char in text)
-        if score > best_score:
-            best = text
-            best_score = score
-    return best
+    return raw.decode("latin-1", errors="ignore")
 
 
 def _load_text_file(path: Path) -> str:
@@ -168,9 +144,17 @@ def _load_text_file(path: Path) -> str:
 
 def _load_html_file(path: Path) -> str:
     raw_html = _decode_text(path.read_bytes())
-    parser = _TextHTMLParser()
-    parser.feed(raw_html)
-    return parser.text()
+    match = re.search(r"(?is)<div\b[^>]*\bid\s*=\s*['\"]?article['\"]?[^>]*>", raw_html)
+    if match:
+        raw_html = raw_html[match.start() :]
+    text = re.sub(r"(?is)<(script|style|noscript)\b.*?</\1>", " ", raw_html)
+    text = re.sub(
+        r"(?i)<\s*/?\s*(br|p|div|tr|li|pre|h[1-6]|table|section|article)\b[^>]*>",
+        "\n",
+        text,
+    )
+    text = re.sub(r"(?s)<[^>]+>", " ", text)
+    return _normalize_text(unescape(text))
 
 
 def _load_docx_file(path: Path) -> str:
@@ -240,6 +224,15 @@ def _classify_issuer(text: str, path: Path) -> tuple[str, str]:
     return "other", "Інші"
 
 
+def _issuer_match_keys(text: str, path: Path) -> list[str]:
+    haystack = f"{path.name}\n{text[:12000]}".casefold()
+    return [
+        key
+        for key, _label, patterns in ISSUER_RULES
+        if any(pattern in haystack for pattern in patterns)
+    ]
+
+
 def _metadata_for(path: Path, text: str) -> dict[str, str]:
     issuer_key, issuer = _classify_issuer(text, path)
     file_type = path.suffix.lower().lstrip(".")
@@ -247,6 +240,7 @@ def _metadata_for(path: Path, text: str) -> dict[str, str]:
         f"issuer:{issuer_key}",
         f"format:{file_type}",
     ]
+    tags.extend(f"issuer_match:{key}" for key in _issuer_match_keys(text, path))
     return {
         "source": str(path),
         "file_name": path.name,
@@ -255,6 +249,14 @@ def _metadata_for(path: Path, text: str) -> dict[str, str]:
         "issuer_key": issuer_key,
         "tags": ",".join(tags),
     }
+
+
+def _document_matches_filters(document: Document, filters: set[str]) -> bool:
+    if not filters:
+        return True
+    raw_tags = str((document.metadata or {}).get("tags") or "")
+    tags = {tag.strip().casefold() for tag in raw_tags.split(",") if tag.strip()}
+    return bool(tags & filters)
 
 
 def _load_single_document(path: Path) -> Document | None:
@@ -299,18 +301,45 @@ def load_langchain_documents(settings: Settings) -> list[Document]:
         return []
 
     documents: list[Document] = []
+    filters = ingest_tag_filters(settings)
+    logger.info("Loading documents from %s", root)
+    if filters:
+        logger.info("Applying ingest tag filters: %s", ", ".join(sorted(filters)))
     loader = PyPDFDirectoryLoader(str(root), glob="**/*.pdf")
-    documents.extend(_tag_pdf_documents(loader.load()))
+    pdf_documents = [
+        document
+        for document in _tag_pdf_documents(loader.load())
+        if _document_matches_filters(document, filters)
+    ]
+    documents.extend(pdf_documents)
+    if pdf_documents:
+        logger.info("Loaded %d matching PDF page documents", len(pdf_documents))
 
-    for path in sorted(root.rglob("*")):
+    paths = [
+        path
+        for path in sorted(root.rglob("*"))
+        if path.is_file() and path.suffix.lower() in SUPPORTED_EXTENSIONS - {".pdf"}
+    ]
+    logger.info("Found %d non-PDF files to load", len(paths))
+    skipped = 0
+    for index, path in enumerate(paths, start=1):
         if not path.is_file():
             continue
-        if path.suffix.lower() not in SUPPORTED_EXTENSIONS - {".pdf"}:
-            continue
         document = _load_single_document(path)
-        if document is not None:
+        if document is not None and _document_matches_filters(document, filters):
             documents.append(document)
+        else:
+            skipped += 1
+        if index == 1 or index % 100 == 0 or index == len(paths):
+            logger.info(
+                "Scanned %d/%d non-PDF files; matched=%d skipped=%d",
+                index,
+                len(paths),
+                len(documents),
+                skipped,
+            )
 
+    logger.info("Loaded %d source documents total", len(documents))
     return documents
 
 

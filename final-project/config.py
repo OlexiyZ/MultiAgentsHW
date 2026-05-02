@@ -58,8 +58,16 @@ class Settings(BaseSettings):
     data_dir: str = Field(default="data", validation_alias=AliasChoices("DATA_DIR"))
     index_dir: str = Field(default="index", validation_alias=AliasChoices("INDEX_DIR"))
     chroma_collection: str = Field(
-        default="lesson10_kb",
+        default="final-project_kb",
         validation_alias=AliasChoices("CHROMA_COLLECTION"),
+    )
+    ingest_tag_filters: str = Field(
+        default="issuer_match:nbu",
+        validation_alias=AliasChoices("INGEST_TAG_FILTERS", "ingest_tag_filters"),
+        description=(
+            "Comma-separated metadata tags to include during ingest. "
+            "Empty value disables ingest tag filtering."
+        ),
     )
     chunk_size: int = Field(default=1024, validation_alias=AliasChoices("CHUNK_SIZE"))
     chunk_overlap: int = Field(
