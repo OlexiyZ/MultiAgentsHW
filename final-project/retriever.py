@@ -41,7 +41,14 @@ def _format_hits(documents: list[Document]) -> str:
     for i, doc in enumerate(documents, start=1):
         meta = doc.metadata or {}
         source = meta.get("source") or meta.get("file_path") or "unknown"
-        parts.append(f"### Snippet {i} (source: {source})\n{doc.page_content}")
+        issuer = meta.get("issuer")
+        tags = meta.get("tags")
+        details = [f"source: {source}"]
+        if issuer:
+            details.append(f"issuer: {issuer}")
+        if tags:
+            details.append(f"tags: {tags}")
+        parts.append(f"### Snippet {i} ({'; '.join(details)})\n{doc.page_content}")
     return "\n\n".join(parts)
 
 

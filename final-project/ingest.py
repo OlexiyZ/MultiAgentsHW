@@ -11,8 +11,7 @@ from kb_common import index_dir, load_langchain_documents, split_langchain_docum
 
 
 def main() -> None:
-    """Rebuilds the Chroma index from PDFs in data/ using OpenAI embeddings.
-    Перебудовує індекс Chroma з PDF у data/ за допомогою ембеддингів OpenAI."""
+    """Rebuilds the Chroma index from supported files in data/."""
 
     configure_logging()
     logger = logging.getLogger(__name__)
@@ -25,7 +24,10 @@ def main() -> None:
     raw = load_langchain_documents(settings)
     splits = split_langchain_documents(settings, raw)
     if not splits:
-        raise SystemExit("No PDF chunks produced. Add .pdf files under data/ and run again.")
+        raise SystemExit(
+            "No chunks produced. Add .pdf, .txt, .html, .htm, .doc, or .docx "
+            "files under data/ and run again."
+        )
 
     embeddings = OpenAIEmbeddings(
         model=settings.embedding_model,
