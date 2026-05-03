@@ -107,12 +107,22 @@ class Settings(BaseSettings):
         default=5000, validation_alias=AliasChoices("MAX_URL_CONTENT_LENGTH")
     )
     max_normative_doc_chars: int = Field(
-        default=50000,
+        default=500000,
         validation_alias=AliasChoices("MAX_NORMATIVE_DOC_CHARS"),
         description=(
             "Maximum characters returned by read_full_normative_text for official "
             "normative documents."
         ),
+    )
+    normative_excerpt_window: int = Field(
+        default=2500,
+        validation_alias=AliasChoices("NORMATIVE_EXCERPT_WINDOW"),
+        description="Characters of context before and after each normative keyword hit.",
+    )
+    normative_excerpt_max_fragments: int = Field(
+        default=8,
+        validation_alias=AliasChoices("NORMATIVE_EXCERPT_MAX_FRAGMENTS"),
+        description="Maximum focused fragments returned from one normative document.",
     )
     output_dir: str = Field(default="output", validation_alias=AliasChoices("OUTPUT_DIR"))
     max_iterations: int = Field(

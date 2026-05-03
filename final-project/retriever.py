@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 
 from langchain_chroma import Chroma
 from langchain_community.retrievers import BM25Retriever
@@ -13,6 +14,7 @@ from tracing import build_langchain_config, observe
 
 
 logger = logging.getLogger(__name__)
+_CHROMA_LOCK = threading.RLock()
 
 
 def reciprocal_rank_fusion(
@@ -70,14 +72,17 @@ def hybrid_search(query: str, settings: Settings | None = None) -> str:
         model=settings.embedding_model,
         api_key=settings.api_key.get_secret_value(),
     )
-    store = Chroma(
-        persist_directory=str(idx),
-        collection_name=settings.chroma_collection,
-        embedding_function=embeddings,
-    )
+    with _CHROMA_LOCK:
+        store = Chroma(
+            persist_directory=str(idx),
+            collection_name=settings.chroma_collection,
+            embedding_function=embeddings,
+        )
 
-    collection = store._collection
-    all_data = collection.get(include=["documents", "metadatas"])
+        collection = store._collection
+        all_data = collection.get(include=["documents", "metadatas"])
+        vector_hits = store.similarity_search(query, k=settings.retrieval_vector_k)
+
     if not all_data["documents"]:
         logger.warning("Retriever: Chroma collection has no documents")
         return (
@@ -90,7 +95,6 @@ def hybrid_search(query: str, settings: Settings | None = None) -> str:
         for doc, meta in zip(all_data["documents"], all_data["metadatas"])
     ]
 
-    vector_hits = store.similarity_search(query, k=settings.retrieval_vector_k)
     bm25 = BM25Retriever.from_documents(splits)
     bm25.k = settings.retrieval_bm25_k
     bm25_hits = bm25.invoke(
