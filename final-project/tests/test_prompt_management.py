@@ -30,10 +30,14 @@ def test_load_system_prompt_compiles_langfuse_prompt(monkeypatch) -> None:
     _build_client.cache_clear()
     _load_prompt.cache_clear()
 
-    result = load_system_prompt("lesson-12/planner-system", "production", user_role="planner")
+    result = load_system_prompt(
+        "final-project/planner-system",
+        "production",
+        user_role="planner",
+    )
 
     assert result == "compiled prompt"
-    assert fake_client.calls == [("lesson-12/planner-system", "production")]
+    assert fake_client.calls == [("final-project/planner-system", "production")]
     assert fake_prompt.variables == {"user_role": "planner"}
 
 
@@ -44,7 +48,7 @@ def test_load_system_prompt_rejects_non_text_prompt(monkeypatch) -> None:
     _load_prompt.cache_clear()
 
     try:
-        load_system_prompt("lesson-12/planner-system", "production")
+        load_system_prompt("final-project/planner-system", "production")
     except TypeError as exc:
         assert "must compile to text" in str(exc)
     else:  # pragma: no cover

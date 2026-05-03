@@ -14,7 +14,7 @@ EMBED_BATCH_SIZE = 256
 
 
 def main() -> None:
-    """Rebuilds the Chroma index from supported files in data/."""
+    """Builds or appends to the Chroma index from supported files in data/."""
 
     configure_logging()
     logger = logging.getLogger(__name__)
@@ -27,19 +27,24 @@ def main() -> None:
     splits = split_langchain_documents(settings, raw)
     if not splits:
         raise SystemExit(
-            "No chunks produced. Add .pdf, .txt, .html, .htm, .doc, or .docx "
-            "files under data/ and run again."
+            "No chunks produced. Add .pdf, .txt, .json, .yaml, .yml, .html, "
+            ".htm, .doc, or .docx files under data/ and run again."
         )
     logger.info("Produced %d chunks", len(splits))
 
     logger.info(
-        "Embedding chunks into Chroma collection %s at %s",
+        "Embedding chunks into Chroma collection %s at %s (rebuild=%s)",
         settings.chroma_collection,
         target,
+        settings.ingest_rebuild_index,
     )
-    if target.exists():
+    if settings.ingest_rebuild_index and target.exists():
         logger.info("Removing existing Chroma index at %s", target)
         shutil.rmtree(target)
+    elif target.exists():
+        logger.info("Appending to existing Chroma index at %s", target)
+    else:
+        logger.info("Creating new Chroma index at %s", target)
     target.mkdir(parents=True, exist_ok=True)
 
     embeddings = OpenAIEmbeddings(

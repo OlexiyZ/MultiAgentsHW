@@ -61,6 +61,14 @@ class Settings(BaseSettings):
         default="final-project_kb",
         validation_alias=AliasChoices("CHROMA_COLLECTION"),
     )
+    ingest_rebuild_index: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("INGEST_REBUILD_INDEX", "ingest_rebuild_index"),
+        description=(
+            "If true, ingest removes the existing Chroma index before writing. "
+            "If false, ingest appends to the existing index."
+        ),
+    )
     ingest_tag_filters: str = Field(
         default="issuer_match:nbu",
         validation_alias=AliasChoices("INGEST_TAG_FILTERS", "ingest_tag_filters"),
@@ -122,7 +130,7 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("LANGFUSE_BASE_URL", "langfuse_base_url"),
     )
     langfuse_default_tags: str = Field(
-        default="mas,lesson-12",
+        default="mas,final-project",
         validation_alias=AliasChoices(
             "LANGFUSE_DEFAULT_TAGS",
             "langfuse_default_tags",
@@ -136,28 +144,28 @@ class Settings(BaseSettings):
         ),
     )
     supervisor_prompt_name: str = Field(
-        default="lesson-12/supervisor-system",
+        default="final-project/supervisor-system",
         validation_alias=AliasChoices(
             "SUPERVISOR_PROMPT_NAME",
             "supervisor_prompt_name",
         ),
     )
     planner_prompt_name: str = Field(
-        default="lesson-12/planner-system",
+        default="final-project/planner-system",
         validation_alias=AliasChoices(
             "PLANNER_PROMPT_NAME",
             "planner_prompt_name",
         ),
     )
     research_prompt_name: str = Field(
-        default="lesson-12/research-system",
+        default="final-project/research-system",
         validation_alias=AliasChoices(
             "RESEARCH_PROMPT_NAME",
             "research_prompt_name",
         ),
     )
     critic_prompt_name: str = Field(
-        default="lesson-12/critic-system",
+        default="final-project/critic-system",
         validation_alias=AliasChoices(
             "CRITIC_PROMPT_NAME",
             "critic_prompt_name",

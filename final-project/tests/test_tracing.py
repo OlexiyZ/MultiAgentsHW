@@ -10,7 +10,7 @@ def test_build_langchain_config_propagates_langfuse_metadata(monkeypatch) -> Non
             "trace_name": "mas_supervisor_turn",
             "session_id": "session-123",
             "user_id": "user-456",
-            "tags": ["mas", "lesson-12"],
+            "tags": ["mas", "final-project"],
             "enabled": False,
         },
     )
@@ -25,7 +25,7 @@ def test_build_langchain_config_propagates_langfuse_metadata(monkeypatch) -> Non
     assert config["configurable"] == {"thread_id": "thread-1"}
     assert config["metadata"]["langfuse_session_id"] == "session-123"
     assert config["metadata"]["langfuse_user_id"] == "user-456"
-    assert config["metadata"]["langfuse_tags"] == ["mas", "lesson-12"]
+    assert config["metadata"]["langfuse_tags"] == ["mas", "final-project"]
     assert config["metadata"]["subagent"] == "planner"
     assert "callbacks" not in config
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import re
 import shutil
@@ -19,7 +20,17 @@ from config import BASE_DIR, Settings
 
 logger = logging.getLogger(__name__)
 
-SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".html", ".htm", ".doc", ".docx"}
+SUPPORTED_EXTENSIONS = {
+    ".pdf",
+    ".txt",
+    ".json",
+    ".yaml",
+    ".yml",
+    ".html",
+    ".htm",
+    ".doc",
+    ".docx",
+}
 
 ISSUER_RULES: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     (
@@ -140,6 +151,34 @@ def _decode_text(raw: bytes) -> str:
 
 def _load_text_file(path: Path) -> str:
     return _normalize_text(_decode_text(path.read_bytes()))
+
+
+def _structured_data_to_text(data: object) -> str:
+    return json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True)
+
+
+def _load_json_file(path: Path) -> str:
+    raw_text = _decode_text(path.read_bytes())
+    try:
+        return _normalize_text(_structured_data_to_text(json.loads(raw_text)))
+    except json.JSONDecodeError:
+        logger.warning("Invalid JSON, loading as plain text: %s", path)
+        return _normalize_text(raw_text)
+
+
+def _load_yaml_file(path: Path) -> str:
+    raw_text = _decode_text(path.read_bytes())
+    try:
+        import yaml
+    except ImportError:
+        logger.warning("PyYAML is not installed, loading YAML as plain text: %s", path)
+        return _normalize_text(raw_text)
+
+    try:
+        return _normalize_text(_structured_data_to_text(yaml.safe_load(raw_text)))
+    except Exception as exc:
+        logger.warning("Invalid YAML, loading as plain text: %s (%s)", path, exc)
+        return _normalize_text(raw_text)
 
 
 def _load_html_file(path: Path) -> str:
@@ -264,6 +303,10 @@ def _load_single_document(path: Path) -> Document | None:
     try:
         if suffix == ".txt":
             text = _load_text_file(path)
+        elif suffix == ".json":
+            text = _load_json_file(path)
+        elif suffix in {".yaml", ".yml"}:
+            text = _load_yaml_file(path)
         elif suffix in {".html", ".htm"}:
             text = _load_html_file(path)
         elif suffix == ".docx":

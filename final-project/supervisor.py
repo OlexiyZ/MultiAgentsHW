@@ -88,6 +88,6 @@ supervisor = create_agent(
 
 
 SUPERVISOR_CONFIG = {
-    "configurable": {"thread_id": "lesson-12-supervisor-cli"},
+    "configurable": {"thread_id": "final-project-supervisor-cli"},
     "recursion_limit": settings.max_iterations,
 }

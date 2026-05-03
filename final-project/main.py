@@ -189,7 +189,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Lesson 10 multi-agent supervisor CLI")
     parser.add_argument(
         "--thread-id",
-        default="lesson-12-supervisor-cli",
+        default="final-project-supervisor-cli",
         help="Thread id for checkpointed conversation",
     )
     parser.add_argument(
