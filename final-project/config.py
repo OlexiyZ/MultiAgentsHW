@@ -106,6 +106,14 @@ class Settings(BaseSettings):
     max_url_content_length: int = Field(
         default=5000, validation_alias=AliasChoices("MAX_URL_CONTENT_LENGTH")
     )
+    max_normative_doc_chars: int = Field(
+        default=50000,
+        validation_alias=AliasChoices("MAX_NORMATIVE_DOC_CHARS"),
+        description=(
+            "Maximum characters returned by read_full_normative_text for official "
+            "normative documents."
+        ),
+    )
     output_dir: str = Field(default="output", validation_alias=AliasChoices("OUTPUT_DIR"))
     max_iterations: int = Field(
         default=16, validation_alias=AliasChoices("MAX_ITERATIONS")

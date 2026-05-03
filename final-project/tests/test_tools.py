@@ -208,7 +208,7 @@ def test_supervisor_saves_report_on_approve():
             ToolCall(
                 name="save_report",
                 input_parameters={
-                    "filename": "open_banking_ukraine.md",
+                    "topic": "open banking in Ukraine",
                     "content": (
                         "## Відкритий банкінг в Україні\n\n"
                         "Відкритий банкінг в Україні регулюється Постановою НБУ № 80 (25.07.2025) "

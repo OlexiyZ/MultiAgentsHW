@@ -34,6 +34,16 @@ SUPPORTED_EXTENSIONS = {
 
 ISSUER_RULES: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     (
+        "ema",
+        "EMA / Open API Group",
+        (
+            "ema.com.ua",
+            "open api group",
+            "a ukrainian standards initiative",
+            "www.ema.com.ua/business/openapigroup",
+        ),
+    ),
+    (
         "verkhovna_rada",
         "Верховна Рада України",
         (
